@@ -131,7 +131,6 @@ public class PlayerServiceImpl implements PlayService {
     @Override
     public Player updateEntity(Map<String, String> updatedPlayer, long id) {
         Player player = newEntity(updatedPlayer, getEntityById(id));
-        deleteById(id);
         playerRepository.saveAndFlush(player);
         return player;
     }
