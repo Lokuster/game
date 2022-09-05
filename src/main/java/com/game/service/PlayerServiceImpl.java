@@ -27,28 +27,14 @@ public class PlayerServiceImpl implements PlayService {
                                     long before, String banned, String race, String profession,
                                     int minExperience, int maxExperience, int minLevel,
                                     int maxLevel) {
-        switch (order) {
-            case "ID":
-                return getFilteredEntitiesById(pageNumber, pageSize, name, title, after, before, banned, race, profession,
-                        minExperience, maxExperience, minLevel, maxLevel);
-            case "NAME":
-                return getFilteredEntitiesByName(pageNumber, pageSize, name, title, after, before, banned, race, profession,
-                        minExperience, maxExperience, minLevel, maxLevel);
-            case "EXPERIENCE":
-                return getFilteredEntitiesByExperience(pageNumber, pageSize, name, title, after, before, banned, race, profession,
-                        minExperience, maxExperience, minLevel, maxLevel);
-            case "BIRTHDAY":
-                return getFilteredEntitiesByBirthday(pageNumber, pageSize, name, title, after, before, banned, race, profession,
-                        minExperience, maxExperience, minLevel, maxLevel);
-            default:
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
+        return getSortedEntities(getFilteredEntities(name, title, after, before, banned, race, profession, minExperience, maxExperience, minLevel, maxLevel),
+                order, pageNumber, pageSize);
     }
 
     private Stream<Player> getFilteredEntities(String name, String title, long after,
-                                              long before, String banned, String race,
-                                              String profession, int minExperience, int maxExperience,
-                                              int minLevel, int maxLevel) {
+                                               long before, String banned, String race, String profession,
+                                               int minExperience, int maxExperience, int minLevel,
+                                               int maxLevel) {
         return playerRepository.findByNameContainingAndTitleContaining(name, title).stream()
                 .filter(x -> x.getBirthday().getTime() >= after && x.getBirthday().getTime() <= before)
                 .filter(x -> banned.equals("") || x.isBanned() == banned.equals("true"))
@@ -58,54 +44,32 @@ public class PlayerServiceImpl implements PlayService {
                 .filter(x -> x.getLevel() >= minLevel && x.getLevel() <= maxLevel);
     }
 
-    private List<Player> getFilteredEntitiesById(int pageNumber, int pageSize, String name,
-                                                String title, long after, long before,
-                                                String banned, String race, String profession,
-                                                int minExperience, int maxExperience, int minLevel,
-                                                int maxLevel) {
-        return getFilteredEntities(name, title, after, before, banned, race, profession, minExperience, maxExperience, minLevel, maxLevel)
-                .sorted(Comparator.comparingLong(Player::getId))
-                .skip((long) pageNumber * pageSize)
-                .limit(pageSize)
-                .collect(Collectors.toList());
+    private List<Player> getSortedEntities(Stream<Player> players, String order, int pageNumber, int pageSize) {
+        switch (order) {
+            case "ID":
+                return players.sorted(Comparator.comparingLong(Player::getId))
+                        .skip((long) pageNumber * pageSize)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            case "NAME":
+                return players.sorted(Comparator.comparing(Player::getName))
+                        .skip((long) pageNumber * pageSize)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            case "EXPERIENCE":
+                return players.sorted(Comparator.comparingLong(Player::getExperience))
+                        .skip((long) pageNumber * pageSize)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            case "BIRTHDAY":
+                return players.sorted(Comparator.comparing(Player::getBirthday))
+                        .skip((long) pageNumber * pageSize)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
     }
-
-    private List<Player> getFilteredEntitiesByName(int pageNumber, int pageSize, String name,
-                                                  String title, long after, long before,
-                                                  String banned, String race, String profession,
-                                                  int minExperience, int maxExperience, int minLevel,
-                                                  int maxLevel) {
-        return getFilteredEntities(name, title, after, before, banned, race, profession, minExperience, maxExperience, minLevel, maxLevel)
-                .sorted(Comparator.comparing(Player::getName))
-                .skip((long) pageNumber * pageSize)
-                .limit(pageSize)
-                .collect(Collectors.toList());
-    }
-
-    private List<Player> getFilteredEntitiesByExperience(int pageNumber, int pageSize, String name,
-                                                        String title, long after, long before,
-                                                        String banned, String race, String profession,
-                                                        int minExperience, int maxExperience, int minLevel,
-                                                        int maxLevel) {
-        return getFilteredEntities(name, title, after, before, banned, race, profession, minExperience, maxExperience, minLevel, maxLevel)
-                .sorted(Comparator.comparingLong(Player::getExperience))
-                .skip((long) pageNumber * pageSize)
-                .limit(pageSize)
-                .collect(Collectors.toList());
-    }
-
-    private List<Player> getFilteredEntitiesByBirthday(int pageNumber, int pageSize, String name,
-                                                      String title, long after, long before,
-                                                      String banned, String race, String profession,
-                                                      int minExperience, int maxExperience, int minLevel,
-                                                      int maxLevel) {
-        return getFilteredEntities(name, title, after, before, banned, race, profession, minExperience, maxExperience, minLevel, maxLevel)
-                .sorted(Comparator.comparing(Player::getBirthday))
-                .skip((long) pageNumber * pageSize)
-                .limit(pageSize)
-                .collect(Collectors.toList());
-    }
-
 
     @Override
     public Player createEntity(Map<String, String> newPlayer) {
