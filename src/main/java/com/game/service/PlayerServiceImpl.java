@@ -47,28 +47,23 @@ public class PlayerServiceImpl implements PlayService {
     private List<Player> getSortedEntities(Stream<Player> players, String order, int pageNumber, int pageSize) {
         switch (order) {
             case "ID":
-                return players.sorted(Comparator.comparingLong(Player::getId))
-                        .skip((long) pageNumber * pageSize)
-                        .limit(pageSize)
-                        .collect(Collectors.toList());
+                return getLimitedEntities(players.sorted(Comparator.comparing(Player::getId)), pageNumber, pageSize);
             case "NAME":
-                return players.sorted(Comparator.comparing(Player::getName))
-                        .skip((long) pageNumber * pageSize)
-                        .limit(pageSize)
-                        .collect(Collectors.toList());
+                return getLimitedEntities(players.sorted(Comparator.comparing(Player::getName)), pageNumber, pageSize);
             case "EXPERIENCE":
-                return players.sorted(Comparator.comparingLong(Player::getExperience))
-                        .skip((long) pageNumber * pageSize)
-                        .limit(pageSize)
-                        .collect(Collectors.toList());
+                return getLimitedEntities(players.sorted(Comparator.comparing(Player::getExperience)), pageNumber, pageSize);
             case "BIRTHDAY":
-                return players.sorted(Comparator.comparing(Player::getBirthday))
-                        .skip((long) pageNumber * pageSize)
-                        .limit(pageSize)
-                        .collect(Collectors.toList());
+                return getLimitedEntities(players.sorted(Comparator.comparing(Player::getBirthday)), pageNumber, pageSize);
             default:
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private List<Player> getLimitedEntities(Stream<Player> players, int pageNumber, int pageSize) {
+        return players
+                .skip((long) pageNumber * pageSize)
+                .limit(pageSize)
+                .collect(Collectors.toList());
     }
 
     @Override
